@@ -6,28 +6,28 @@
 //TMRpcm tmrpcm;
 
 
-
+const int relayPin = 40; //trip the machine's relay through a 5V - 120VAC relay using this pin
 const int chipSelect = 53;
 const int name_offset = 11;
 const int beer_offset = 22;
 const int lifetime_offset = 26;
 const int password_offset = 4;
-const int sd_power = 48;
+const int sd_power = 48; 
 
 //********Keypad Setup********
 #include <Keypad.h>
 const byte ROWS = 4; //four rows
 const byte COLS = 4; //three columns
 char keys[ROWS][COLS] = {
-  {'1','2','3','A'},
-  {'4','5','6','B'},
-  {'7','8','9','C'},
-  {'*','0','#','D'}
+  {'1','2','3'},
+  {'4','5','6'},
+  {'7','8','9'},
+  {'*','0','#'}
 };
 byte rowPins[ROWS] = {
   3, 8, 7, 5}; //connect to the row pinouts of the keypad
 byte colPins[COLS] = {
-  4, 2, 6,9}; //connect to the column pinouts of the keypad
+  4, 2, 6}; //connect to the column pinouts of the keypad
 Keypad keypad = Keypad( makeKeymap(keys), rowPins, colPins, ROWS, COLS );
 char key;
 //********Finished Keypad Setup********
@@ -84,10 +84,9 @@ void setup()
 
 {
   //tmrpcm.speakerPin = 11;
-  pinMode(42,OUTPUT);
-  digitalWrite(42,HIGH);
-  pinMode(40,OUTPUT);
-  digitalWrite(40,HIGH);
+  pinMode(relayPin,OUTPUT);
+  //assume relay is active high!
+  digitalWrite(relayPin,LOW);
   pinMode(sd_power,OUTPUT);
   digitalWrite(sd_power,HIGH);
   Serial.begin(115200);
@@ -96,9 +95,6 @@ void setup()
   clearScreen();
   turnOffCursors();
   Serial3.write("Set Up LCD Link!");
-  //Set backlight to highest
-  Serial3.write(0x7C);
-  Serial3.write(157);
   errorNum = initAndCheckDevices();
   if (errorNum==4)
   {
@@ -1084,9 +1080,9 @@ void getAllTimeLeaders(){
   Serial3.print(F("All-Time Leaders"));
   setToSecondLine();
   beerNum = 0;
+  //TODO
 }
   
-
 
 void shiftList()
 {
@@ -1513,16 +1509,11 @@ void releaseBeer()
 {
   Serial.println(F("Dispensing Beer!"));
   timer = millis();
-  //relay is active low for can machine
-  //First relay bridges pins 1 and 3 on the Jones Plug
-  digitalWrite(40,LOW);
+  //Assumes your relay is active high!
+  digitalWrite(relayPin,HIGH);
   while(millis() < timer+500){}
-  digitalWrite(40,HIGH);
-  while(millis() < timer+1000){}
-  //Second relay bridges pins 1 and 7 on the Jones Plug
-  digitalWrite(42,LOW);
-  while(millis() < timer+1500){}
-  digitalWrite(42,HIGH);
+  digitalWrite(relayPin,LOW);
+
 }
 
 void clearScreen()
